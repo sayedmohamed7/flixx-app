@@ -2,6 +2,38 @@ const global = {
   currentPage: window.location.pathname,
 };
 
+// Display popular movies
+async function displayPopularMovies() {
+  const { results } = await fetchAPIData('movie/popular');
+
+  results.forEach((movie) => {
+    const div = document.createElement('div');
+    div.classList.add('card');
+    div.innerHTML = `<a href="movie-details.html?id=${movie.id}">
+              ${
+                movie.poster_path
+                  ? `<img
+                src="https://image.tmdb.org/t/p/w500/${movie.poster_path}"
+                class="card-img-top"
+                alt="${movie.title}"
+              />`
+                  : `<img
+                src="images/no-image.jpg"
+                class="card-img-top"
+                alt="${movie.title}"
+              />`
+              }
+            </a>
+            <div class="card-body">
+              <h5 class="card-title">${movie.title}</h5>
+              <p class="card-text">
+                <small class="text-muted">Release: ${movie.release_date}</small>
+              </p>
+            </div>`;
+    const container = document.getElementById('popular-movies');
+    container.appendChild(div);
+  });
+}
 
 // Fetch data from TMDB API
 async function fetchAPIData(endpoint) {
@@ -22,7 +54,7 @@ const highlightActiveLink = () => {
   links.forEach((link) => {
     link.getAttribute('href') === global.currentPage &&
       link.classList.add('active');
-      global.currentPage === '/index.html'&& links[0].classList.add('active');
+    global.currentPage === '/index.html' && links[0].classList.add('active');
   });
 };
 
@@ -31,6 +63,7 @@ const init = () => {
   switch (global.currentPage) {
     case '/':
     case '/index.html':
+      displayPopularMovies();
       break;
     case '/shows.html':
       console.log('Shows');
