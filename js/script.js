@@ -103,7 +103,9 @@ async function displayMovieDetails() {
             <ul class="list-group">
             ${movie.genres.map((genre) => `<li>${genre.name}</li>`).join('')}
             </ul>
-            <a href="${movie.homepage}" target="_blank" class="btn">Visit Movie Homepage</a>
+            <a href="${
+              movie.homepage
+            }" target="_blank" class="btn">Visit Movie Homepage</a>
           </div>
         </div>
         <div class="details-bottom">
@@ -111,11 +113,15 @@ async function displayMovieDetails() {
           <ul>
             <li><span class="text-secondary">Budget:</span> $${movie.budget.toLocaleString()}</li>
             <li><span class="text-secondary">Revenue:</span> $${movie.revenue.toLocaleString()}</li>
-            <li><span class="text-secondary">Runtime:</span> ${movie.runtime} minutes</li>
+            <li><span class="text-secondary">Runtime:</span> ${
+              movie.runtime
+            } minutes</li>
             <li><span class="text-secondary">Status:</span> ${movie.status}</li>
           </ul>
           <h4>Production Companies</h4>
-          <div class="list-group">${movie.production_companies.map(comp => `<span>${comp.name}</span>`).join(', ')}.</div>
+          <div class="list-group">${movie.production_companies
+            .map((comp) => `<span>${comp.name}</span>`)
+            .join(', ')}.</div>
         </div>`;
   document.getElementById('movie-details').appendChild(div);
 
