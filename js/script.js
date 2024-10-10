@@ -5,6 +5,7 @@ const global = {
     type: '',
     page: 1,
     totalPages: 1,
+    totalResults: 0,
   },
   api: {
     apiKey: '2635839629d3c675dd8efe3cc11cb4f8',
@@ -13,7 +14,7 @@ const global = {
 };
 
 // Display 20 most popular movies
-async function displayPopularMovies() {
+const displayPopularMovies = async () => {
   const { results } = await fetchAPIData('movie/popular');
 
   results.forEach((movie) => {
@@ -43,10 +44,10 @@ async function displayPopularMovies() {
     const container = document.getElementById('popular-movies');
     container.appendChild(div);
   });
-}
+};
 
 // Display 20 most popular TV shows
-async function displayPopularShows() {
+const displayPopularShows = async () => {
   const { results } = await fetchAPIData('tv/popular');
 
   results.forEach((show) => {
@@ -77,10 +78,10 @@ async function displayPopularShows() {
     `;
     document.getElementById('popular-shows').appendChild(div);
   });
-}
+};
 
 // Display movie details
-async function displayMovieDetails() {
+const displayMovieDetails = async () => {
   const movieId = window.location.search.split('=')[1];
   const movie = await fetchAPIData(`movie/${movieId}`);
 
@@ -138,10 +139,10 @@ async function displayMovieDetails() {
             .join(', ')}.</div>
         </div>`;
   document.getElementById('movie-details').appendChild(div);
-}
+};
 
 // Display show details
-async function displayShowDetails() {
+const displayShowDetails = async () => {
   const showId = window.location.search.split('=')[1];
   const show = await fetchAPIData(`tv/${showId}`);
 
@@ -202,7 +203,7 @@ async function displayShowDetails() {
             .join(', ')}.</div>
         </div>`;
   document.getElementById('show-details').appendChild(div);
-}
+};
 
 // Display backdorp on details page
 const displayBackgroundImage = (type, backgroundPath) => {
@@ -224,14 +225,19 @@ const displayBackgroundImage = (type, backgroundPath) => {
 };
 
 // Search function
-async function search() {
+const search = async () => {
   const queryString = window.location.search;
   const urlParams = new URLSearchParams(queryString);
   global.search.type = urlParams.get('type');
   global.search.term = urlParams.get('search-term');
 
   if (global.search.term) {
-    const { results, total_pages, page } = await searchAPIData();
+    const { results, total_pages, page, total_results } = await searchAPIData();
+
+    global.search.page = page;
+    global.search.totalPages = total_pages;
+    global.search.totalResults = total_results;
+
     if (results.length === 0) {
       showAlert('No results found!');
       return;
@@ -241,9 +247,14 @@ async function search() {
   } else {
     showAlert('please enter search term!');
   }
-}
+};
 
 const displaySearchResults = (results) => {
+  // Clear previous results
+  document.querySelector('#search-results').innerHTML = '';
+  document.querySelector('#search-results-heading').innerHTML = '';
+  document.querySelector('#pagination').innerHTML = '';
+
   results.forEach((result) => {
     const div = document.createElement('div');
     div.classList.add('card');
@@ -273,12 +284,48 @@ const displaySearchResults = (results) => {
           </p>
         </div>
       `;
+    document.querySelector('#search-results-heading').innerHTML = `
+    <h2>${results.length} of ${global.search.totalResults} Results for: "${global.search.term}"</h2>`;
     document.querySelector('#search-results').appendChild(div);
+  });
+  displayPagination();
+};
+
+// Create and display pagination for search
+const displayPagination = () => {
+  const div = document.createElement('div');
+  div.classList.add('pagination');
+  div.innerHTML = `
+          <button class="btn btn-primary" id="prev">Prev</button>
+          <button class="btn btn-primary" id="next">Next</button>
+          <div class="page-counter">Page ${global.search.page} of ${global.search.totalPages}</div>
+          `;
+  document.querySelector('#pagination').appendChild(div);
+
+  // Disable prev btn if on first page
+  global.search.page === 1 && (document.querySelector('#prev').disabled = true);
+
+  // Disable next btn if on last page
+  global.search.page === global.search.totalPages &&
+    (document.querySelector('#next').disabled = true);
+
+  // Next page
+  document.querySelector('#next').addEventListener('click', async () => {
+    global.search.page++;
+    const { results, total_pages } = await searchAPIData();
+    displaySearchResults(results);
+  });
+
+  // Previous page
+  document.querySelector('#prev').addEventListener('click', async () => {
+    global.search.page--;
+    const { results, total_pages } = await searchAPIData();
+    displaySearchResults(results);
   });
 };
 
 // Display slider movies
-async function displaySlider() {
+const displaySlider = async () => {
   const { results } = await fetchAPIData('movie/now_playing');
   results.forEach((movie) => {
     const div = document.createElement('div');
@@ -298,7 +345,7 @@ async function displaySlider() {
 
     initSwiper();
   });
-}
+};
 
 const initSwiper = () => {
   const swiper = new Swiper('.swiper', {
@@ -308,7 +355,7 @@ const initSwiper = () => {
     loop: true,
     autoplay: {
       delay: 4000,
-      disableOnInterAction: false,
+      disableOnInterAction: true,
     },
     breakpoints: {
       500: {
@@ -325,7 +372,7 @@ const initSwiper = () => {
 };
 
 // Fetch data from TMDB API
-async function fetchAPIData(endpoint) {
+const fetchAPIData = async (endpoint) => {
   const API_KEY = global.api.apiKey;
   const API_URL = global.api.apiURL;
 
@@ -337,22 +384,22 @@ async function fetchAPIData(endpoint) {
   const data = await response.json();
   hideSpinner();
   return data;
-}
+};
 
 // Make request to search
-async function searchAPIData() {
+const searchAPIData = async () => {
   const API_KEY = global.api.apiKey;
   const API_URL = global.api.apiURL;
 
   showSpinner();
   const response = await fetch(
-    `${API_URL}search/${global.search.type}?api_key=${API_KEY}&language=en-US&query=${global.search.term}`
+    `${API_URL}search/${global.search.type}?api_key=${API_KEY}&language=en-US&query=${global.search.term}&page=${global.search.page}`
   );
 
   const data = await response.json();
   hideSpinner();
   return data;
-}
+};
 
 // Show spinner function
 const showSpinner = () => {
